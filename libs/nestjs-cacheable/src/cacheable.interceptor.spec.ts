@@ -12,7 +12,7 @@ describe('CacheableInterceptor', () => {
 
   const mockCacheService = {
     get: jest.fn(),
-    set: jest.fn(),
+    set: jest.fn().mockResolvedValue(true),
   }
 
   const mockReflector = {
@@ -22,6 +22,7 @@ describe('CacheableInterceptor', () => {
   const mockExecutionContext = {
     switchToHttp: () => ({
       getRequest: () => ({
+        method: 'GET',
         url: '/test',
       }),
     }),
@@ -74,7 +75,7 @@ describe('CacheableInterceptor', () => {
     const result$ = await interceptor.intercept(mockExecutionContext, mockCallHandler)
     const value = await firstValueFrom(result$)
     expect(value).toBe('new_value')
-    expect(mockCacheService.set).toHaveBeenCalledWith('/test', 'new_value', undefined)
+    expect(mockCacheService.set).toHaveBeenCalledWith('GET:/test', 'new_value', undefined)
   })
 
   it('should use TTL from decorator if present', async () => {
@@ -83,6 +84,6 @@ describe('CacheableInterceptor', () => {
     mockReflector.get.mockReturnValue(5000)
     const result$ = await interceptor.intercept(mockExecutionContext, mockCallHandler)
     await firstValueFrom(result$)
-    expect(mockCacheService.set).toHaveBeenCalledWith('/test', 'new_value', 5000)
+    expect(mockCacheService.set).toHaveBeenCalledWith('GET:/test', 'new_value', 5000)
   })
 })

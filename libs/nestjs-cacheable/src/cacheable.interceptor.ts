@@ -15,14 +15,14 @@ export class CacheableInterceptor implements NestInterceptor {
     const key = this.getCacheKey(context)
     const cachedValue = await this.cacheService.get(key)
 
-    if (cachedValue) {
+    if (cachedValue !== undefined) {
       return of(cachedValue)
     }
 
     const ttl = this.reflector.get<number>(CACHE_TTL_KEY, context.getHandler())
 
     const value = await firstValueFrom(next.handle())
-    await this.cacheService.set(key, value, ttl)
+    this.cacheService.set(key, value, ttl).catch(() => {})
     return of(value)
   }
 
@@ -30,6 +30,6 @@ export class CacheableInterceptor implements NestInterceptor {
     // A simple key generation strategy. This can be improved later.
     const httpContext = context.switchToHttp()
     const request = httpContext.getRequest()
-    return request.url
+    return `${request.method}:${request.url}`
   }
 }

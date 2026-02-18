@@ -23,9 +23,7 @@ export class NestjsCacheableService implements OnModuleDestroy {
   }
 
   async disconnect() {
-    if (this.cache.secondary && typeof this.cache.secondary.disconnect === 'function') {
-      await this.cache.secondary.disconnect()
-    }
+    await this.cache.disconnect()
   }
 
   async get<T>(key: string): Promise<T | undefined> {
@@ -33,7 +31,11 @@ export class NestjsCacheableService implements OnModuleDestroy {
   }
 
   async set(key: string, value: any, ttl?: number): Promise<boolean> {
-    this.logger.log(`Setting cache for key: ${key}, value: ${JSON.stringify(value)}, ttl: ${ttl}`)
+    try {
+      this.logger.log(`Setting cache for key: ${key}, value: ${JSON.stringify(value)}, ttl: ${ttl}`)
+    } catch {
+      this.logger.log(`Setting cache for key: ${key}, value: [unserializable], ttl: ${ttl}`)
+    }
     if (ttl !== undefined) {
       await this.cache.set(key, value, ttl)
     } else {
